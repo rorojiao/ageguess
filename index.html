@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgeGuess 🎭 - Fun Age & Brain Tests</title>
+  <meta name="description" content="Discover your mental age, brain age, face age, and life expectancy with fun tests!">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-brand">AgeGuess 🎭</div>
+    <div class="nav-links">
+      <a href="index.html" data-en="Home" data-zh="首页">Home</a>
+      <a href="mental-age.html" data-en="Mental Age" data-zh="心理年龄">Mental Age</a>
+      <a href="face-age.html" data-en="Face Age" data-zh="面相年龄">Face Age</a>
+      <a href="life-expect.html" data-en="Life Expectancy" data-zh="寿命预测">Life Expectancy</a>
+      <a href="brain-age.html" data-en="Brain Age" data-zh="大脑年龄">Brain Age</a>
+    </div>
+    <button class="lang-btn" onclick="toggleLang()">中/EN</button>
+  </nav>
+
+  <div class="hero">
+    <h1 data-en="How Old Are You Really?" data-zh="你真正的年龄是多少？">How Old Are You Really?</h1>
+    <p data-en="Fun tests to discover your mental age, brain age, face age, and more!" data-zh="通过趣味测试，发现你的心理年龄、大脑年龄、面相年龄等！">Fun tests to discover your mental age, brain age, face age, and more!</p>
+  </div>
+
+  <div class="cards">
+    <div class="card" onclick="location.href='mental-age.html'">
+      <div class="card-icon">🧠</div>
+      <h3 data-en="Mental Age Test" data-zh="心理年龄测试">Mental Age Test</h3>
+      <p data-en="20 fun questions to reveal your true mental age. Are you young at heart or an old soul?" data-zh="20道趣味题目，揭示你的真实心理年龄。你是童心未泯还是灵魂早熟？">20 fun questions to reveal your true mental age. Are you young at heart or an old soul?</p>
+    </div>
+
+    <div class="card" onclick="location.href='face-age.html'">
+      <div class="card-icon">✨</div>
+      <h3 data-en="Face Age Analysis" data-zh="面相年龄分析">Face Age Analysis</h3>
+      <p data-en="Based on your lifestyle, skin care, and habits - predict how old you look!" data-zh="根据你的生活方式、护肤习惯等，推测你的外观年龄！">Based on your lifestyle, skin care, and habits - predict how old you look!</p>
+    </div>
+
+    <div class="card" onclick="location.href='life-expect.html'">
+      <div class="card-icon">⏳</div>
+      <h3 data-en="Life Expectancy" data-zh="寿命预测">Life Expectancy</h3>
+      <p data-en="Calculate your estimated lifespan based on health habits, with personalized tips." data-zh="根据健康习惯计算预估寿命，附带个性化健康建议。">Calculate your estimated lifespan based on health habits, with personalized tips.</p>
+    </div>
+
+    <div class="card" onclick="location.href='brain-age.html'">
+      <div class="card-icon">⚡</div>
+      <h3 data-en="Brain Age Test" data-zh="大脑年龄测试">Brain Age Test</h3>
+      <p data-en="Reaction speed + memory games to determine your cognitive age. Is your brain still sharp?" data-zh="反应速度+记忆力游戏，测定你的认知年龄。你的大脑还敏锐吗？">Reaction speed + memory games to determine your cognitive age. Is your brain still sharp?</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <p data-en="Made with 💜 for fun | Share with friends!" data-zh="用心制作 💜 纯属娱乐 | 分享给朋友！">Made with 💜 for fun | Share with friends!</p>
+    <a href="#" class="tip-link" onclick="showTip()" data-en="☕ Support / Tip" data-zh="☕ 打赏支持">☕ Support / Tip</a>
+    <p style="margin-top:1rem"><a href="https://github.com/rorojiao/ageguess" target="_blank">GitHub</a></p>
+  </div>
+
+  <script>
+    let lang = localStorage.getItem('lang') || 'en';
+    
+    function toggleLang() {
+      lang = lang === 'en' ? 'zh' : 'en';
+      localStorage.setItem('lang', lang);
+      updateLang();
+    }
+    
+    function updateLang() {
+      document.querySelectorAll('[data-en]').forEach(el => {
+        el.textContent = el.getAttribute('data-' + lang);
+      });
+    }
+    
+    function showTip() {
+      alert('ETH/Polygon Address:\n0xEeD903787Cb86bcCc17777E5C7d10A4c2De43823\n\nThank you! 感谢支持！');
+    }
+    
+    updateLang();
+  </script>
+</body>
+</html>

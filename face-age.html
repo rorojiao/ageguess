@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Face Age Analysis ✨ | AgeGuess</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-brand">AgeGuess 🎭</div>
+    <div class="nav-links">
+      <a href="index.html" data-en="Home" data-zh="首页">Home</a>
+      <a href="mental-age.html" data-en="Mental Age" data-zh="心理年龄">Mental Age</a>
+      <a href="face-age.html" data-en="Face Age" data-zh="面相年龄">Face Age</a>
+      <a href="life-expect.html" data-en="Life Expectancy" data-zh="寿命预测">Life Expectancy</a>
+      <a href="brain-age.html" data-en="Brain Age" data-zh="大脑年龄">Brain Age</a>
+    </div>
+    <button class="lang-btn" onclick="toggleLang()">中/EN</button>
+  </nav>
+
+  <div class="quiz-wrap">
+    <div class="quiz-header">
+      <h1 data-en="Face Age Analysis ✨" data-zh="面相年龄分析 ✨">Face Age Analysis ✨</h1>
+      <p data-en="Based on lifestyle & habits, predict how old you look!" data-zh="基于生活方式和习惯，预测你的外观年龄！">Based on lifestyle & habits, predict how old you look!</p>
+    </div>
+
+    <div class="progress-text"><span id="qnum">1</span>/15</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+    <div id="quiz-container"></div>
+    <div id="result-container" style="display:none"></div>
+  </div>
+
+  <div class="footer">
+    <p data-en="Made with 💜 | No AI, just science!" data-zh="用心制作 💜 | 无AI，纯科学！">Made with 💜 | No AI, just science!</p>
+  </div>
+
+  <script>
+    let lang = localStorage.getItem('lang') || 'en';
+    const questions = [
+      {en: "How much water do you drink daily?", zh: "你每天喝多少水？", opts: [{en:"Rarely",zh:"很少",v:5},{en:"2-4 glasses",zh:"2-4杯",v:2},{en:"6-8 glasses",zh:"6-8杯",v:-3},{en:"Over 8 glasses",zh:"8杯以上",v:-4}]},
+      {en: "Your sun protection routine?", zh: "你的防晒习惯？", opts: [{en:"Never use sunscreen",zh:"从不用防晒",v:7},{en:"Only on beach",zh:"只在海滩用",v:3},{en:"Summer only",zh:"只在夏天",v:1},{en:"Daily SPF",zh:"每天防晒",v:-5}]},
+      {en: "Hours of sleep per night?", zh: "每晚睡眠时间？", opts: [{en:"<5 hours",zh:"少于5小时",v:5},{en:"5-6 hours",zh:"5-6小时",v:2},{en:"7-8 hours",zh:"7-8小时",v:-3},{en:">8 hours",zh:"超过8小时",v:-2}]},
+      {en: "Smoking habits?", zh: "吸烟习惯？", opts: [{en:"Regular smoker",zh:"经常吸烟",v:8},{en:"Occasional",zh:"偶尔",v:4},{en:"Quit recently",zh:"最近戒了",v:2},{en:"Never smoked",zh:"从不吸烟",v:-3}]},
+      {en: "Alcohol consumption?", zh: "饮酒情况？", opts: [{en:"Daily",zh:"每天喝",v:5},{en:"Several times/week",zh:"每周几次",v:3},{en:"Occasionally",zh:"偶尔",v:0},{en:"Rarely/never",zh:"很少/从不",v:-2}]},
+      {en: "Skincare routine?", zh: "护肤日常？", opts: [{en:"None",zh:"没有",v:4},{en:"Just wash face",zh:"只洗脸",v:2},{en:"Cleanser + moisturizer",zh:"洁面+保湿",v:-2},{en:"Full routine",zh:"完整护肤",v:-5}]},
+      {en: "Exercise frequency?", zh: "运动频率？", opts: [{en:"Never",zh:"从不",v:4},{en:"Rarely",zh:"很少",v:2},{en:"2-3 times/week",zh:"每周2-3次",v:-2},{en:"Daily",zh:"每天",v:-4}]},
+      {en: "Stress levels?", zh: "压力水平？", opts: [{en:"Constantly stressed",zh:"持续高压",v:5},{en:"Often stressed",zh:"经常有压力",v:3},{en:"Moderate",zh:"中等",v:0},{en:"Very relaxed",zh:"非常放松",v:-3}]},
+      {en: "Diet quality?", zh: "饮食质量？", opts: [{en:"Mostly junk food",zh:"主要是垃圾食品",v:5},{en:"Mixed",zh:"混合",v:1},{en:"Mostly healthy",zh:"主要健康",v:-2},{en:"Very healthy",zh:"非常健康",v:-4}]},
+      {en: "Screen time daily?", zh: "每日屏幕时间？", opts: [{en:">10 hours",zh:"超过10小时",v:4},{en:"6-10 hours",zh:"6-10小时",v:2},{en:"3-6 hours",zh:"3-6小时",v:0},{en:"<3 hours",zh:"少于3小时",v:-2}]},
+      {en: "How's your skin condition?", zh: "你的皮肤状况？", opts: [{en:"Very dry/oily",zh:"非常干/油",v:3},{en:"Acne-prone",zh:"易长痘",v:2},{en:"Normal",zh:"正常",v:0},{en:"Smooth & clear",zh:"光滑清透",v:-3}]},
+      {en: "Under-eye dark circles?", zh: "黑眼圈情况？", opts: [{en:"Very prominent",zh:"非常明显",v:4},{en:"Noticeable",zh:"比较明显",v:2},{en:"Slight",zh:"轻微",v:0},{en:"None",zh:"没有",v:-2}]},
+      {en: "Outdoor activities?", zh: "户外活动？", opts: [{en:"Daily, no protection",zh:"每天，无防护",v:5},{en:"Often",zh:"经常",v:1},{en:"Sometimes",zh:"有时",v:-1},{en:"Rarely",zh:"很少",v:-2}]},
+      {en: "Fruit & vegetable intake?", zh: "水果蔬菜摄入？", opts: [{en:"Rarely",zh:"很少",v:3},{en:"1-2 servings/day",zh:"每天1-2份",v:1},{en:"3-5 servings/day",zh:"每天3-5份",v:-2},{en:"5+ servings/day",zh:"每天5份以上",v:-4}]},
+      {en: "Overall mood?", zh: "整体情绪？", opts: [{en:"Often unhappy",zh:"经常不开心",v:3},{en:"Ups and downs",zh:"时好时坏",v:1},{en:"Generally happy",zh:"总体开心",v:-2},{en:"Very positive",zh:"非常积极",v:-4}]}
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+    let actualAge = null;
+
+    function showQuestion() {
+      const q = questions[currentQ];
+      const container = document.getElementById('quiz-container');
+      
+      if (currentQ === 0 && actualAge === null) {
+        container.innerHTML = `
+          <div class="question-card">
+            <h2 data-en="First, what's your actual age?" data-zh="首先，你的实际年龄是？">First, what's your actual age?</h2>
+            <div class="options">
+              <input type="number" id="age-input" min="13" max="100" placeholder="${lang === 'en' ? 'Enter your age' : '输入你的年龄'}" style="width:100%; padding:1rem; font-size:1.1rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2); border-radius:0.8rem; color:var(--text); margin-bottom:1rem;">
+              <button class="btn btn-primary" onclick="submitAge()" style="width:100%" data-en="Continue" data-zh="继续">Continue</button>
+            </div>
+          </div>
+        `;
+        updateLang();
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="question-card">
+          <h2>${lang === 'en' ? q.en : q.zh}</h2>
+          <div class="options">
+            ${q.opts.map((opt, i) => `
+              <button class="option-btn" onclick="answer(${opt.v})">${lang === 'en' ? opt.en : opt.zh}</button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      document.getElementById('qnum').textContent = currentQ + 1;
+      document.getElementById('progress').style.width = ((currentQ / 15) * 100) + '%';
+    }
+
+    function submitAge() {
+      const input = document.getElementById('age-input');
+      actualAge = parseInt(input.value);
+      if (!actualAge || actualAge < 13 || actualAge > 100) {
+        alert(lang === 'en' ? 'Please enter a valid age (13-100)' : '请输入有效年龄（13-100）');
+        return;
+      }
+      showQuestion();
+    }
+
+    function answer(value) {
+      score += value;
+      currentQ++;
+      if (currentQ < 15) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      const faceAge = Math.max(13, Math.min(90, actualAge + score));
+      const diff = faceAge - actualAge;
+      
+      let desc = {en: "", zh: ""};
+      
+      if (diff < -5) {
+        desc = {en: "Amazing! You look significantly younger than your age. Your healthy lifestyle is paying off!", zh: "太棒了！你看起来比实际年龄年轻很多。健康的生活方式正在回报你！"};
+      } else if (diff < 0) {
+        desc = {en: "Great! You look younger than your age. Keep up the good habits!", zh: "很好！你看起来比实际年龄年轻。保持好习惯！"};
+      } else if (diff === 0) {
+        desc = {en: "You look exactly your age - perfectly balanced!", zh: "你看起来正好是你的年龄——完美平衡！"};
+      } else if (diff < 5) {
+        desc = {en: "You might look slightly older. Consider improving sleep, hydration, and sun protection!", zh: "你可能看起来稍显老一些。考虑改善睡眠、补水和防晒！"};
+      } else {
+        desc = {en: "Time to level up your self-care! Focus on sleep, skincare, and stress management.", zh: "是时候提升自我护理了！专注于睡眠、护肤和压力管理。"};
+      }
+
+      document.getElementById('quiz-container').style.display = 'none';
+      document.querySelector('.progress-bar').style.display = 'none';
+      document.querySelector('.progress-text').style.display = 'none';
+      
+      const resultHTML = `
+        <div class="result-card">
+          <div class="result-age">${faceAge}</div>
+          <div class="result-label" data-en="Your Apparent Age" data-zh="你的外观年龄">Your Apparent Age</div>
+          <p class="result-desc" style="font-size:0.95rem; color:var(--muted); margin-bottom:1rem;">
+            <span data-en="Actual age: ${actualAge}" data-zh="实际年龄：${actualAge}">Actual age: ${actualAge}</span><br>
+            <span data-en="Difference: ${diff > 0 ? '+' : ''}${diff} years" data-zh="差值：${diff > 0 ? '+' : ''}${diff} 岁">Difference: ${diff > 0 ? '+' : ''}${diff} years</span>
+          </p>
+          <p class="result-desc">${lang === 'en' ? desc.en : desc.zh}</p>
+          <div class="share-btns">
+            <button class="btn btn-primary" onclick="share()" data-en="Share Result" data-zh="分享结果">Share Result</button>
+            <button class="btn btn-outline" onclick="location.reload()" data-en="Retake Test" data-zh="重新测试">Retake Test</button>
+            <button class="btn btn-outline" onclick="location.href='index.html'" data-en="More Tests" data-zh="更多测试">More Tests</button>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('result-container').innerHTML = resultHTML;
+      document.getElementById('result-container').style.display = 'block';
+      updateLang();
+    }
+
+    function share() {
+      const faceAge = document.querySelector('.result-age').textContent;
+      const text = lang === 'en' 
+        ? `My face age is ${faceAge}! (Actual: ${actualAge}) Check yours at AgeGuess ✨` 
+        : `我的面相年龄是 ${faceAge} 岁！（实际：${actualAge}）在 AgeGuess 测测你的 ✨`;
+      const url = window.location.href.split('?')[0];
+      
+      if (navigator.share) {
+        navigator.share({ title: 'AgeGuess', text, url });
+      } else {
+        navigator.clipboard.writeText(text + '\n' + url);
+        alert(lang === 'en' ? 'Link copied!' : '链接已复制！');
+      }
+    }
+
+    function toggleLang() {
+      lang = lang === 'en' ? 'zh' : 'en';
+      localStorage.setItem('lang', lang);
+      updateLang();
+      if (currentQ < 15) showQuestion();
+    }
+
+    function updateLang() {
+      document.querySelectorAll('[data-en]').forEach(el => {
+        const text = el.getAttribute('data-' + lang);
+        if (el.tagName === 'INPUT') {
+          el.placeholder = text;
+        } else {
+          el.textContent = text;
+        }
+      });
+    }
+
+    showQuestion();
+    updateLang();
+  </script>
+</body>
+</html>

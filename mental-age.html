@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mental Age Test 🧠 | AgeGuess</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-brand">AgeGuess 🎭</div>
+    <div class="nav-links">
+      <a href="index.html" data-en="Home" data-zh="首页">Home</a>
+      <a href="mental-age.html" data-en="Mental Age" data-zh="心理年龄">Mental Age</a>
+      <a href="face-age.html" data-en="Face Age" data-zh="面相年龄">Face Age</a>
+      <a href="life-expect.html" data-en="Life Expectancy" data-zh="寿命预测">Life Expectancy</a>
+      <a href="brain-age.html" data-en="Brain Age" data-zh="大脑年龄">Brain Age</a>
+    </div>
+    <button class="lang-btn" onclick="toggleLang()">中/EN</button>
+  </nav>
+
+  <div class="quiz-wrap">
+    <div class="quiz-header">
+      <h1 data-en="Mental Age Test 🧠" data-zh="心理年龄测试 🧠">Mental Age Test 🧠</h1>
+      <p data-en="Answer 20 questions to discover your true mental age!" data-zh="回答20道问题，发现你的真实心理年龄！">Answer 20 questions to discover your true mental age!</p>
+    </div>
+
+    <div class="progress-text"><span id="qnum">1</span>/20</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+    <div id="quiz-container"></div>
+    <div id="result-container" style="display:none"></div>
+  </div>
+
+  <div class="footer">
+    <p data-en="Made with 💜 | Share your result!" data-zh="用心制作 💜 | 分享你的结果！">Made with 💜 | Share your result!</p>
+  </div>
+
+  <script>
+    let lang = localStorage.getItem('lang') || 'en';
+    const questions = [
+      {en: "Your ideal weekend?", zh: "你理想的周末？", opts: [{en:"Party all night",zh:"通宵派对",v:-3},{en:"Netflix & chill",zh:"看剧躺平",v:0},{en:"Morning hike",zh:"晨间徒步",v:3},{en:"Reading a book",zh:"读一本书",v:5}]},
+      {en: "When making decisions...", zh: "做决定时...", opts: [{en:"Follow gut feeling",zh:"跟着感觉走",v:-3},{en:"Ask friends",zh:"问朋友意见",v:0},{en:"Research first",zh:"先做研究",v:3},{en:"Make a pros/cons list",zh:"列优缺点清单",v:5}]},
+      {en: "Your music preference?", zh: "你的音乐偏好？", opts: [{en:"Latest hits",zh:"最新流行",v:-3},{en:"Mix of everything",zh:"什么都听",v:0},{en:"Classic rock/jazz",zh:"经典摇滚/爵士",v:5},{en:"Podcasts",zh:"播客",v:3}]},
+      {en: "At a party, you...", zh: "在派对上你会...", opts: [{en:"Dance on tables",zh:"在桌上跳舞",v:-5},{en:"Chat with friends",zh:"和朋友聊天",v:0},{en:"Leave early",zh:"早早离开",v:5},{en:"Organize activities",zh:"组织活动",v:2}]},
+      {en: "Your favorite emoji?", zh: "你最爱的表情？", opts: [{en:"😂",zh:"😂",v:-3},{en:"❤️",zh:"❤️",v:0},{en:"🤔",zh:"🤔",v:3},{en:"😊",zh:"😊",v:2}]},
+      {en: "Morning routine?", zh: "早晨日常？", opts: [{en:"Snooze 5 times",zh:"闹钟贪睡5次",v:-3},{en:"Rush out the door",zh:"匆忙出门",v:0},{en:"Coffee & news",zh:"咖啡+新闻",v:3},{en:"Exercise first",zh:"先锻炼",v:5}]},
+      {en: "Approach to learning new tech?", zh: "学习新技术的方式？", opts: [{en:"What's tech?",zh:"什么是技术？",v:7},{en:"Ask someone younger",zh:"问年轻人",v:4},{en:"YouTube tutorial",zh:"看油管教程",v:-2},{en:"Read the manual",zh:"看说明书",v:5}]},
+      {en: "Favorite childhood memory?", zh: "最爱的童年回忆？", opts: [{en:"Playing outside",zh:"户外玩耍",v:5},{en:"Video games",zh:"打游戏",v:-2},{en:"Family dinners",zh:"家庭晚餐",v:3},{en:"Building things",zh:"搭建东西",v:2}]},
+      {en: "When stressed, you...", zh: "压力大时你会...", opts: [{en:"Blast music & dance",zh:"开音乐狂舞",v:-3},{en:"Eat junk food",zh:"吃垃圾食品",v:0},{en:"Meditate",zh:"冥想",v:5},{en:"Talk to someone",zh:"找人倾诉",v:2}]},
+      {en: "Your fashion style?", zh: "你的穿衣风格？", opts: [{en:"Latest trends",zh:"最新潮流",v:-3},{en:"Comfortable & casual",zh:"舒适休闲",v:0},{en:"Classic & timeless",zh:"经典永恒",v:5},{en:"Professional",zh:"职业装",v:3}]},
+      {en: "Social media usage?", zh: "社交媒体使用？", opts: [{en:"Post daily",zh:"每天发帖",v:-3},{en:"Scroll endlessly",zh:"无限刷屏",v:-2},{en:"Rare posts",zh:"偶尔发帖",v:2},{en:"What's social media?",zh:"什么是社交媒体？",v:7}]},
+      {en: "Your bedtime?", zh: "你的睡觉时间？", opts: [{en:"Past midnight",zh:"午夜之后",v:-3},{en:"Around 11pm",zh:"11点左右",v:0},{en:"Before 10pm",zh:"10点前",v:5},{en:"Whenever I'm tired",zh:"累了就睡",v:2}]},
+      {en: "Vacation preference?", zh: "度假偏好？", opts: [{en:"Adventure sports",zh:"极限运动",v:-3},{en:"Beach resort",zh:"海滩度假村",v:0},{en:"Cultural tour",zh:"文化之旅",v:5},{en:"Staycation",zh:"宅度假",v:3}]},
+      {en: "Your go-to drink?", zh: "你的首选饮品？", opts: [{en:"Energy drink",zh:"能量饮料",v:-3},{en:"Bubble tea",zh:"珍珠奶茶",v:-2},{en:"Coffee",zh:"咖啡",v:2},{en:"Tea",zh:"茶",v:5}]},
+      {en: "How do you handle disagreements?", zh: "如何处理分歧？", opts: [{en:"Argue my point",zh:"据理力争",v:-2},{en:"Avoid conflict",zh:"避免冲突",v:0},{en:"Find compromise",zh:"寻求妥协",v:3},{en:"Agree to disagree",zh:"求同存异",v:5}]},
+      {en: "Your room is...", zh: "你的房间是...", opts: [{en:"A creative mess",zh:"创意混乱",v:-3},{en:"Lived-in",zh:"有生活气息",v:0},{en:"Organized chaos",zh:"有序的混乱",v:2},{en:"Spotless",zh:"一尘不染",v:5}]},
+      {en: "Favorite type of humor?", zh: "最爱的幽默类型？", opts: [{en:"Memes & TikTok",zh:"表情包和短视频",v:-3},{en:"Slapstick comedy",zh:"滑稽喜剧",v:0},{en:"Witty wordplay",zh:"机智文字游戏",v:3},{en:"Dry sarcasm",zh:"冷幽默讽刺",v:5}]},
+      {en: "Your relationship with deadlines?", zh: "你和截止日期的关系？", opts: [{en:"What deadline?",zh:"什么截止日期？",v:-3},{en:"Last-minute rush",zh:"最后一刻冲刺",v:0},{en:"Done early",zh:"提前完成",v:5},{en:"Right on time",zh:"正好准时",v:3}]},
+      {en: "Favorite way to spend money?", zh: "最爱的花钱方式？", opts: [{en:"Impulse buys",zh:"冲动消费",v:-3},{en:"Experiences",zh:"体验活动",v:0},{en:"Investments",zh:"投资",v:5},{en:"Practical items",zh:"实用物品",v:3}]},
+      {en: "Your life philosophy?", zh: "你的人生哲学？", opts: [{en:"YOLO!",zh:"人生只有一次！",v:-5},{en:"Go with the flow",zh:"随遇而安",v:0},{en:"Plan for the future",zh:"规划未来",v:5},{en:"Balance is key",zh:"平衡是关键",v:3}]}
+    ];
+
+    let currentQ = 0;
+    let score = 0;
+
+    function showQuestion() {
+      const q = questions[currentQ];
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = `
+        <div class="question-card">
+          <h2>${lang === 'en' ? q.en : q.zh}</h2>
+          <div class="options">
+            ${q.opts.map((opt, i) => `
+              <button class="option-btn" onclick="answer(${opt.v})">${lang === 'en' ? opt.en : opt.zh}</button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      document.getElementById('qnum').textContent = currentQ + 1;
+      document.getElementById('progress').style.width = ((currentQ / 20) * 100) + '%';
+    }
+
+    function answer(value) {
+      score += value;
+      currentQ++;
+      if (currentQ < 20) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      const baseAge = 25;
+      const mentalAge = Math.max(10, Math.min(80, baseAge + score));
+      
+      let desc = {
+        en: "You have a balanced perspective!",
+        zh: "你有着平衡的心态！"
+      };
+      
+      if (mentalAge < 18) {
+        desc = {en: "Forever young at heart! You embrace spontaneity and fun.", zh: "永远年轻的心！你拥抱自发性和乐趣。"};
+      } else if (mentalAge < 25) {
+        desc = {en: "Youthful spirit with growing wisdom!", zh: "年轻的精神与日渐增长的智慧！"};
+      } else if (mentalAge < 40) {
+        desc = {en: "Mature and balanced - you've found your groove.", zh: "成熟平衡——你找到了自己的节奏。"};
+      } else if (mentalAge < 60) {
+        desc = {en: "Wise soul with deep perspective on life.", zh: "智慧的灵魂，对生活有深刻的洞察。"};
+      } else {
+        desc = {en: "An old soul with timeless wisdom!", zh: "古老的灵魂，拥有永恒的智慧！"};
+      }
+
+      document.getElementById('quiz-container').style.display = 'none';
+      document.querySelector('.progress-bar').style.display = 'none';
+      document.querySelector('.progress-text').style.display = 'none';
+      
+      const resultHTML = `
+        <div class="result-card">
+          <div class="result-age">${mentalAge}</div>
+          <div class="result-label" data-en="Your Mental Age" data-zh="你的心理年龄">Your Mental Age</div>
+          <p class="result-desc">${lang === 'en' ? desc.en : desc.zh}</p>
+          <div class="share-btns">
+            <button class="btn btn-primary" onclick="share()" data-en="Share Result" data-zh="分享结果">Share Result</button>
+            <button class="btn btn-outline" onclick="location.reload()" data-en="Retake Test" data-zh="重新测试">Retake Test</button>
+            <button class="btn btn-outline" onclick="location.href='index.html'" data-en="More Tests" data-zh="更多测试">More Tests</button>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('result-container').innerHTML = resultHTML;
+      document.getElementById('result-container').style.display = 'block';
+      updateLang();
+    }
+
+    function share() {
+      const text = lang === 'en' 
+        ? `My mental age is ${document.querySelector('.result-age').textContent}! What's yours? Try AgeGuess 🎭` 
+        : `我的心理年龄是 ${document.querySelector('.result-age').textContent} 岁！你的呢？来试试 AgeGuess 🎭`;
+      const url = window.location.href.split('?')[0];
+      
+      if (navigator.share) {
+        navigator.share({ title: 'AgeGuess', text, url });
+      } else {
+        navigator.clipboard.writeText(text + '\n' + url);
+        alert(lang === 'en' ? 'Link copied!' : '链接已复制！');
+      }
+    }
+
+    function toggleLang() {
+      lang = lang === 'en' ? 'zh' : 'en';
+      localStorage.setItem('lang', lang);
+      updateLang();
+      if (currentQ < 20) showQuestion();
+    }
+
+    function updateLang() {
+      document.querySelectorAll('[data-en]').forEach(el => {
+        el.textContent = el.getAttribute('data-' + lang);
+      });
+    }
+
+    showQuestion();
+    updateLang();
+  </script>
+</body>
+</html>

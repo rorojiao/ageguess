@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brain Age Test ⚡ | AgeGuess</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-brand">AgeGuess 🎭</div>
+    <div class="nav-links">
+      <a href="index.html" data-en="Home" data-zh="首页">Home</a>
+      <a href="mental-age.html" data-en="Mental Age" data-zh="心理年龄">Mental Age</a>
+      <a href="face-age.html" data-en="Face Age" data-zh="面相年龄">Face Age</a>
+      <a href="life-expect.html" data-en="Life Expectancy" data-zh="寿命预测">Life Expectancy</a>
+      <a href="brain-age.html" data-en="Brain Age" data-zh="大脑年龄">Brain Age</a>
+    </div>
+    <button class="lang-btn" onclick="toggleLang()">中/EN</button>
+  </nav>
+
+  <div class="quiz-wrap">
+    <div class="quiz-header">
+      <h1 data-en="Brain Age Test ⚡" data-zh="大脑年龄测试 ⚡">Brain Age Test ⚡</h1>
+      <p data-en="Test your reaction speed & memory to calculate brain age!" data-zh="测试反应速度和记忆力，计算大脑年龄！">Test your reaction speed & memory to calculate brain age!</p>
+    </div>
+
+    <div id="game-container"></div>
+    <div id="result-container" style="display:none"></div>
+  </div>
+
+  <div class="footer">
+    <p data-en="Made with 💜 | Train your brain!" data-zh="用心制作 💜 | 训练你的大脑！">Made with 💜 | Train your brain!</p>
+  </div>
+
+  <script>
+    let lang = localStorage.getItem('lang') || 'en';
+    let stage = 0;
+    let reactionTimes = [];
+    let memoryScore = 0;
+    let sequenceScore = 0;
+
+    const stages = [
+      { type: 'intro', title: {en: 'Ready to test your brain?', zh: '准备测试你的大脑了吗？'} },
+      { type: 'reaction1', title: {en: 'Reaction Test 1/3', zh: '反应测试 1/3'} },
+      { type: 'reaction2', title: {en: 'Reaction Test 2/3', zh: '反应测试 2/3'} },
+      { type: 'reaction3', title: {en: 'Reaction Test 3/3', zh: '反应测试 3/3'} },
+      { type: 'memory', title: {en: 'Memory Game', zh: '记忆游戏'} },
+      { type: 'sequence', title: {en: 'Number Sequence', zh: '数字序列'} }
+    ];
+
+    function showStage() {
+      const container = document.getElementById('game-container');
+      const s = stages[stage];
+      
+      if (s.type === 'intro') {
+        container.innerHTML = `
+          <div class="game-area">
+            <h2>${lang === 'en' ? s.title.en : s.title.zh}</h2>
+            <p data-en="This test has 3 parts: reaction speed, memory matching, and pattern recognition." data-zh="此测试包含3个部分：反应速度、记忆配对和模式识别。">This test has 3 parts: reaction speed, memory matching, and pattern recognition.</p>
+            <button class="btn btn-primary" onclick="nextStage()" style="margin-top:2rem;" data-en="Start Test" data-zh="开始测试">Start Test</button>
+          </div>
+        `;
+        updateLang();
+      } else if (s.type.startsWith('reaction')) {
+        startReactionTest();
+      } else if (s.type === 'memory') {
+        startMemoryGame();
+      } else if (s.type === 'sequence') {
+        startSequenceTest();
+      }
+    }
+
+    let reactionStartTime;
+    let reactionTimeout;
+
+    function startReactionTest() {
+      const container = document.getElementById('game-container');
+      container.innerHTML = `
+        <div class="game-area">
+          <h2 data-en="Reaction Test ${stage}/3" data-zh="反应测试 ${stage}/3">Reaction Test ${stage}/3</h2>
+          <p data-en="Click the circle as fast as you can when it turns green!" data-zh="当圆圈变绿时，尽快点击它！">Click the circle as fast as you can when it turns green!</p>
+          <div class="reaction-circle" id="reaction-circle" style="background:#555; margin-top:2rem;" data-en="Wait..." data-zh="等待...">Wait...</div>
+        </div>
+      `;
+      updateLang();
+
+      const delay = 1500 + Math.random() * 2500;
+      reactionTimeout = setTimeout(() => {
+        const circle = document.getElementById('reaction-circle');
+        circle.style.background = 'linear-gradient(135deg, #10b981, #34d399)';
+        circle.innerHTML = lang === 'en' ? 'CLICK!' : '点击！';
+        reactionStartTime = Date.now();
+        circle.onclick = recordReaction;
+      }, delay);
+
+      document.getElementById('reaction-circle').onclick = () => {
+        clearTimeout(reactionTimeout);
+        alert(lang === 'en' ? 'Too early! Wait for green.' : '太早了！等待绿色。');
+        startReactionTest();
+      };
+    }
+
+    function recordReaction() {
+      const time = Date.now() - reactionStartTime;
+      reactionTimes.push(time);
+      nextStage();
+    }
+
+    function startMemoryGame() {
+      const container = document.getElementById('game-container');
+      const emojis = ['🍎', '🍌', '🍇', '🍓', '🍊', '🍉', '🥝', '🍑'];
+      const gameEmojis = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+      
+      let flipped = [];
+      let matched = 0;
+      let moves = 0;
+
+      container.innerHTML = `
+        <div class="game-area">
+          <h2 data-en="Memory Matching" data-zh="记忆配对">Memory Matching</h2>
+          <p data-en="Match all pairs! Moves: <span id='moves'>0</span>" data-zh="配对所有！步数：<span id='moves'>0</span>">Match all pairs! Moves: <span id="moves">0</span></p>
+          <div class="memory-grid" style="grid-template-columns: repeat(4, 1fr); max-width:320px;" id="mem-grid"></div>
+        </div>
+      `;
+      updateLang();
+
+      const grid = document.getElementById('mem-grid');
+      gameEmojis.forEach((emoji, i) => {
+        const cell = document.createElement('div');
+        cell.className = 'mem-cell hidden';
+        cell.dataset.emoji = emoji;
+        cell.dataset.index = i;
+        cell.onclick = () => flipCard(cell);
+        grid.appendChild(cell);
+      });
+
+      function flipCard(cell) {
+        if (flipped.length === 2 || cell.classList.contains('revealed') || cell.classList.contains('matched')) return;
+        
+        cell.classList.remove('hidden');
+        cell.classList.add('revealed');
+        cell.textContent = cell.dataset.emoji;
+        flipped.push(cell);
+
+        if (flipped.length === 2) {
+          moves++;
+          document.getElementById('moves').textContent = moves;
+          
+          if (flipped[0].dataset.emoji === flipped[1].dataset.emoji) {
+            flipped.forEach(c => c.classList.add('matched'));
+            flipped = [];
+            matched += 2;
+            
+            if (matched === 16) {
+              memoryScore = Math.max(0, 50 - moves * 2);
+              setTimeout(nextStage, 800);
+            }
+          } else {
+            setTimeout(() => {
+              flipped.forEach(c => {
+                c.classList.remove('revealed');
+                c.classList.add('hidden');
+                c.textContent = '';
+              });
+              flipped = [];
+            }, 1000);
+          }
+        }
+      }
+    }
+
+    function startSequenceTest() {
+      const container = document.getElementById('game-container');
+      const sequence = Array.from({length: 6}, () => Math.floor(Math.random() * 9));
+      
+      container.innerHTML = `
+        <div class="game-area">
+          <h2 data-en="Number Sequence" data-zh="数字序列">Number Sequence</h2>
+          <p data-en="Memorize this sequence:" data-zh="记住这个序列：">Memorize this sequence:</p>
+          <div style="font-size:2.5rem; font-weight:900; margin:2rem 0; letter-spacing:0.5rem;" id="sequence-display">${sequence.join(' ')}</div>
+          <p id="timer-text" data-en="Memorizing..." data-zh="记忆中...">Memorizing...</p>
+        </div>
+      `;
+      updateLang();
+
+      setTimeout(() => {
+        document.getElementById('sequence-display').textContent = '? ? ? ? ? ?';
+        document.getElementById('timer-text').innerHTML = lang === 'en' 
+          ? 'Now type the sequence:' 
+          : '现在输入序列：';
+        
+        container.innerHTML += `
+          <input type="text" id="seq-input" placeholder="${lang === 'en' ? 'Enter numbers' : '输入数字'}" style="width:100%; max-width:300px; padding:1rem; font-size:1.2rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2); border-radius:0.8rem; color:var(--text); margin-top:1rem; text-align:center;">
+          <button class="btn btn-primary" onclick="checkSequence()" style="margin-top:1rem;" data-en="Submit" data-zh="提交">Submit</button>
+        `;
+        updateLang();
+        
+        window.currentSequence = sequence.join('');
+      }, 5000);
+    }
+
+    function checkSequence() {
+      const input = document.getElementById('seq-input').value.replace(/\s/g, '');
+      const correct = window.currentSequence;
+      
+      let correctDigits = 0;
+      for (let i = 0; i < Math.min(input.length, correct.length); i++) {
+        if (input[i] === correct[i]) correctDigits++;
+      }
+      
+      sequenceScore = (correctDigits / correct.length) * 50;
+      nextStage();
+    }
+
+    function nextStage() {
+      stage++;
+      if (stage < stages.length) {
+        showStage();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      const avgReaction = reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length;
+      
+      let reactionAge = 25;
+      if (avgReaction < 250) reactionAge = 20;
+      else if (avgReaction < 300) reactionAge = 25;
+      else if (avgReaction < 400) reactionAge = 35;
+      else if (avgReaction < 500) reactionAge = 45;
+      else reactionAge = 55;
+
+      const memoryAge = 25 + (50 - memoryScore) / 2;
+      const sequenceAge = 25 + (50 - sequenceScore) / 2;
+      
+      const brainAge = Math.round((reactionAge + memoryAge + sequenceAge) / 3);
+
+      let desc = {en: '', zh: ''};
+      if (brainAge < 25) {
+        desc = {en: 'Lightning fast! Your brain is in peak condition.', zh: '闪电般快速！你的大脑处于巅峰状态。'};
+      } else if (brainAge < 35) {
+        desc = {en: 'Sharp and focused! Your cognitive abilities are excellent.', zh: '敏锐专注！你的认知能力极好。'};
+      } else if (brainAge < 50) {
+        desc = {en: 'Good performance! Keep challenging your brain.', zh: '表现不错！继续挑战你的大脑。'};
+      } else {
+        desc = {en: 'Time to exercise your brain! Try puzzles and games regularly.', zh: '是时候锻炼大脑了！定期尝试谜题和游戏。'};
+      }
+
+      document.getElementById('game-container').style.display = 'none';
+      
+      const resultHTML = `
+        <div class="result-card">
+          <div class="result-age">${brainAge}</div>
+          <div class="result-label" data-en="Your Brain Age" data-zh="你的大脑年龄">Your Brain Age</div>
+          <p class="result-desc">${lang === 'en' ? desc.en : desc.zh}</p>
+          <div style="margin:1.5rem 0; color:var(--muted); font-size:0.9rem;">
+            <p data-en="Avg Reaction: ${Math.round(avgReaction)}ms" data-zh="平均反应：${Math.round(avgReaction)}毫秒">Avg Reaction: ${Math.round(avgReaction)}ms</p>
+            <p data-en="Memory Score: ${Math.round(memoryScore)}/50" data-zh="记忆分数：${Math.round(memoryScore)}/50">Memory Score: ${Math.round(memoryScore)}/50</p>
+            <p data-en="Sequence Score: ${Math.round(sequenceScore)}/50" data-zh="序列分数：${Math.round(sequenceScore)}/50">Sequence Score: ${Math.round(sequenceScore)}/50</p>
+          </div>
+          <div class="share-btns">
+            <button class="btn btn-primary" onclick="share()" data-en="Share Result" data-zh="分享结果">Share Result</button>
+            <button class="btn btn-outline" onclick="location.reload()" data-en="Retake Test" data-zh="重新测试">Retake Test</button>
+            <button class="btn btn-outline" onclick="location.href='index.html'" data-en="More Tests" data-zh="更多测试">More Tests</button>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('result-container').innerHTML = resultHTML;
+      document.getElementById('result-container').style.display = 'block';
+      updateLang();
+    }
+
+    function share() {
+      const brainAge = document.querySelector('.result-age').textContent;
+      const text = lang === 'en' 
+        ? `My brain age is ${brainAge}! Test yours at AgeGuess ⚡` 
+        : `我的大脑年龄是 ${brainAge} 岁！在 AgeGuess 测测你的 ⚡`;
+      const url = window.location.href.split('?')[0];
+      
+      if (navigator.share) {
+        navigator.share({ title: 'AgeGuess', text, url });
+      } else {
+        navigator.clipboard.writeText(text + '\n' + url);
+        alert(lang === 'en' ? 'Link copied!' : '链接已复制！');
+      }
+    }
+
+    function toggleLang() {
+      lang = lang === 'en' ? 'zh' : 'en';
+      localStorage.setItem('lang', lang);
+      updateLang();
+    }
+
+    function updateLang() {
+      document.querySelectorAll('[data-en]').forEach(el => {
+        const text = el.getAttribute('data-' + lang);
+        if (el.tagName === 'INPUT') {
+          el.placeholder = text;
+        } else {
+          el.innerHTML = text;
+        }
+      });
+    }
+
+    showStage();
+    updateLang();
+  </script>
+</body>
+</html>

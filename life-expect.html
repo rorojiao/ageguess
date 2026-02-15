@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Expectancy ⏳ | AgeGuess</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-brand">AgeGuess 🎭</div>
+    <div class="nav-links">
+      <a href="index.html" data-en="Home" data-zh="首页">Home</a>
+      <a href="mental-age.html" data-en="Mental Age" data-zh="心理年龄">Mental Age</a>
+      <a href="face-age.html" data-en="Face Age" data-zh="面相年龄">Face Age</a>
+      <a href="life-expect.html" data-en="Life Expectancy" data-zh="寿命预测">Life Expectancy</a>
+      <a href="brain-age.html" data-en="Brain Age" data-zh="大脑年龄">Brain Age</a>
+    </div>
+    <button class="lang-btn" onclick="toggleLang()">中/EN</button>
+  </nav>
+
+  <div class="quiz-wrap">
+    <div class="quiz-header">
+      <h1 data-en="Life Expectancy Calculator ⏳" data-zh="寿命预测计算器 ⏳">Life Expectancy Calculator ⏳</h1>
+      <p data-en="Estimate your lifespan based on lifestyle choices" data-zh="基于生活方式选择估算你的寿命">Estimate your lifespan based on lifestyle choices</p>
+    </div>
+
+    <div class="progress-text"><span id="qnum">1</span>/12</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+    <div id="quiz-container"></div>
+    <div id="result-container" style="display:none"></div>
+  </div>
+
+  <div class="footer">
+    <p data-en="Made with 💜 | For entertainment only!" data-zh="用心制作 💜 | 仅供娱乐！">Made with 💜 | For entertainment only!</p>
+  </div>
+
+  <script>
+    let lang = localStorage.getItem('lang') || 'en';
+    const questions = [
+      {en: "Gender & starting age?", zh: "性别和起始年龄？", opts: [{en:"Male",zh:"男性",base:76},{en:"Female",zh:"女性",base:81}]},
+      {en: "Do you smoke?", zh: "你吸烟吗？", opts: [{en:"Yes, daily",zh:"是，每天",v:-10},{en:"Occasionally",zh:"偶尔",v:-5},{en:"Former smoker",zh:"曾经吸烟",v:-2},{en:"Never",zh:"从不",v:2}]},
+      {en: "Exercise frequency?", zh: "运动频率？", opts: [{en:"Never",zh:"从不",v:-4},{en:"1-2 times/week",zh:"每周1-2次",v:1},{en:"3-5 times/week",zh:"每周3-5次",v:3},{en:"Daily",zh:"每天",v:5}]},
+      {en: "Diet quality?", zh: "饮食质量？", opts: [{en:"Mostly processed/fast food",zh:"主要是加工/快餐",v:-3},{en:"Average",zh:"一般",v:0},{en:"Balanced",zh:"均衡",v:2},{en:"Mediterranean/plant-based",zh:"地中海/植物性",v:4}]},
+      {en: "Alcohol consumption?", zh: "饮酒量？", opts: [{en:"Heavy (>2 drinks/day)",zh:"大量（每天>2杯）",v:-5},{en:"Moderate (1-2/day)",zh:"适量（每天1-2杯）",v:1},{en:"Light (occasional)",zh:"少量（偶尔）",v:2},{en:"None",zh:"不喝",v:1}]},
+      {en: "Sleep quality?", zh: "睡眠质量？", opts: [{en:"Poor (<5h or >10h)",zh:"差（<5h或>10h）",v:-3},{en:"Fair (5-6h)",zh:"一般（5-6h）",v:-1},{en:"Good (7-8h)",zh:"好（7-8h）",v:2},{en:"Excellent (consistent 7-8h)",zh:"极好（稳定7-8h）",v:3}]},
+      {en: "Stress levels?", zh: "压力水平？", opts: [{en:"Chronic high stress",zh:"长期高压",v:-4},{en:"Moderate stress",zh:"中等压力",v:-1},{en:"Low stress",zh:"低压力",v:2},{en:"Very relaxed",zh:"非常放松",v:3}]},
+      {en: "Social connections?", zh: "社交联系？", opts: [{en:"Isolated/lonely",zh:"孤立/孤独",v:-3},{en:"Few friends",zh:"朋友很少",v:0},{en:"Good social circle",zh:"良好社交圈",v:2},{en:"Strong community ties",zh:"强大社群联系",v:3}]},
+      {en: "BMI/Weight status?", zh: "BMI/体重状况？", opts: [{en:"Obese",zh:"肥胖",v:-5},{en:"Overweight",zh:"超重",v:-2},{en:"Normal",zh:"正常",v:2},{en:"Underweight",zh:"偏瘦",v:-1}]},
+      {en: "Chronic conditions?", zh: "慢性病？", opts: [{en:"Multiple conditions",zh:"多种疾病",v:-8},{en:"One condition (managed)",zh:"一种疾病（控制中）",v:-3},{en:"None",zh:"没有",v:3}]},
+      {en: "Mental health?", zh: "心理健康？", opts: [{en:"Depression/anxiety (untreated)",zh:"抑郁/焦虑（未治疗）",v:-4},{en:"Some issues (managed)",zh:"一些问题（治疗中）",v:-1},{en:"Good",zh:"良好",v:1},{en:"Excellent",zh:"极好",v:3}]},
+      {en: "Preventive care?", zh: "预防保健？", opts: [{en:"Never see doctor",zh:"从不看医生",v:-3},{en:"Only when sick",zh:"只在生病时",v:0},{en:"Annual checkups",zh:"年度体检",v:2},{en:"Proactive health monitoring",zh:"主动健康监测",v:4}]}
+    ];
+
+    let currentQ = 0;
+    let baseAge = 0;
+    let lifeYears = 0;
+    let currentAge = 0;
+    let improvements = [];
+
+    function showQuestion() {
+      const q = questions[currentQ];
+      const container = document.getElementById('quiz-container');
+      
+      if (currentQ === 0) {
+        container.innerHTML = `
+          <div class="question-card">
+            <h2 data-en="What's your current age?" data-zh="你现在多少岁？">What's your current age?</h2>
+            <input type="number" id="current-age" min="13" max="100" placeholder="${lang === 'en' ? 'Enter age' : '输入年龄'}" style="width:100%; padding:1rem; font-size:1.1rem; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.2); border-radius:0.8rem; color:var(--text); margin-bottom:1.5rem;">
+            <h2>${lang === 'en' ? q.en : q.zh}</h2>
+            <div class="options">
+              ${q.opts.map((opt, i) => `
+                <button class="option-btn" onclick="answerFirst(${opt.base})">${lang === 'en' ? opt.en : opt.zh}</button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+        updateLang();
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="question-card">
+          <h2>${lang === 'en' ? q.en : q.zh}</h2>
+          <div class="options">
+            ${q.opts.map((opt, i) => `
+              <button class="option-btn" onclick="answer(${opt.v}, '${opt.en}', ${i})">${lang === 'en' ? opt.en : opt.zh}</button>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      document.getElementById('qnum').textContent = currentQ + 1;
+      document.getElementById('progress').style.width = ((currentQ / 12) * 100) + '%';
+    }
+
+    function answerFirst(base) {
+      const ageInput = document.getElementById('current-age');
+      currentAge = parseInt(ageInput.value);
+      if (!currentAge || currentAge < 13 || currentAge > 100) {
+        alert(lang === 'en' ? 'Please enter your age first (13-100)' : '请先输入你的年龄（13-100）');
+        return;
+      }
+      baseAge = base;
+      currentQ++;
+      showQuestion();
+    }
+
+    function answer(value, optText, index) {
+      lifeYears += value;
+      
+      // Track areas for improvement
+      if (value < 0 && currentQ >= 1) {
+        const qTexts = {
+          1: {en: "Quit smoking", zh: "戒烟"},
+          2: {en: "Exercise more regularly", zh: "更规律运动"},
+          3: {en: "Improve diet quality", zh: "改善饮食质量"},
+          4: {en: "Moderate alcohol intake", zh: "适度饮酒"},
+          5: {en: "Improve sleep habits", zh: "改善睡眠习惯"},
+          6: {en: "Reduce stress levels", zh: "降低压力水平"},
+          7: {en: "Build social connections", zh: "建立社交联系"},
+          8: {en: "Achieve healthy weight", zh: "达到健康体重"},
+          10: {en: "Prioritize mental health", zh: "重视心理健康"},
+          11: {en: "Get regular checkups", zh: "定期体检"}
+        };
+        if (qTexts[currentQ]) improvements.push(qTexts[currentQ]);
+      }
+      
+      currentQ++;
+      if (currentQ < 12) {
+        showQuestion();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      const estimatedLife = Math.max(currentAge + 1, Math.min(110, baseAge + lifeYears));
+      const yearsLeft = Math.max(0, estimatedLife - currentAge);
+      
+      document.getElementById('quiz-container').style.display = 'none';
+      document.querySelector('.progress-bar').style.display = 'none';
+      document.querySelector('.progress-text').style.display = 'none';
+      
+      const improvementList = improvements.length > 0 ? `
+        <h3 style="margin:2rem 0 1rem; font-size:1.2rem;" data-en="💡 Top Improvements" data-zh="💡 改善建议">💡 Top Improvements</h3>
+        <ul class="tips-list">
+          ${improvements.slice(0, 5).map(tip => `<li>${lang === 'en' ? tip.en : tip.zh}</li>`).join('')}
+        </ul>
+      ` : '';
+
+      const resultHTML = `
+        <div class="result-card">
+          <div class="result-age">${estimatedLife}</div>
+          <div class="result-label" data-en="Estimated Life Expectancy" data-zh="预估寿命">Estimated Life Expectancy</div>
+          <p class="result-desc" style="font-size:1.1rem; margin-bottom:0.5rem;">
+            <span data-en="~${yearsLeft} years remaining" data-zh="~还剩 ${yearsLeft} 年">~${yearsLeft} years remaining</span>
+          </p>
+          <p class="result-desc" style="font-size:0.85rem; color:var(--muted);" data-en="Based on current lifestyle choices. Small changes can add years!" data-zh="基于当前生活方式。小改变能增加寿命！">Based on current lifestyle choices. Small changes can add years!</p>
+          ${improvementList}
+          <div class="share-btns">
+            <button class="btn btn-primary" onclick="share()" data-en="Share (Hide Number)" data-zh="分享（隐藏数字）">Share (Hide Number)</button>
+            <button class="btn btn-outline" onclick="location.reload()" data-en="Retake Test" data-zh="重新测试">Retake Test</button>
+            <button class="btn btn-outline" onclick="location.href='index.html'" data-en="More Tests" data-zh="更多测试">More Tests</button>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('result-container').innerHTML = resultHTML;
+      document.getElementById('result-container').style.display = 'block';
+      updateLang();
+    }
+
+    function share() {
+      const text = lang === 'en' 
+        ? `I just calculated my life expectancy! What's yours? Try AgeGuess ⏳` 
+        : `我刚测了我的寿命预测！你的呢？来试试 AgeGuess ⏳`;
+      const url = window.location.href.split('?')[0];
+      
+      if (navigator.share) {
+        navigator.share({ title: 'AgeGuess', text, url });
+      } else {
+        navigator.clipboard.writeText(text + '\n' + url);
+        alert(lang === 'en' ? 'Link copied!' : '链接已复制！');
+      }
+    }
+
+    function toggleLang() {
+      lang = lang === 'en' ? 'zh' : 'en';
+      localStorage.setItem('lang', lang);
+      updateLang();
+      if (currentQ < 12) showQuestion();
+    }
+
+    function updateLang() {
+      document.querySelectorAll('[data-en]').forEach(el => {
+        const text = el.getAttribute('data-' + lang);
+        if (el.tagName === 'INPUT') {
+          el.placeholder = text;
+        } else {
+          el.textContent = text;
+        }
+      });
+    }
+
+    showQuestion();
+    updateLang();
+  </script>
+</body>
+</html>
